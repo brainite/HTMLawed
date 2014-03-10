@@ -7,6 +7,9 @@ A PHP Labware internal utility; www.bioinformatics.org/phplabware/internal_utili
 
 See htmLawed_README.txt/htm
 */
+namespace HtmLawed;
+abstract class HtmLawed {
+
 function htmLawed($t, $C=1, $S=array()){
     $C = is_array($C) ? $C : array();
     if(!empty($C['valid_xhtml'])){
@@ -718,4 +721,6 @@ function kses_hook($t, &$C, &$S){
 // kses compat
     return $t;
 // eof
+}
+
 }
