@@ -10,7 +10,7 @@ See htmLawed_README.txt/htm
 namespace HtmLawed;
 abstract class HtmLawed {
 
-function htmLawed($t, $C=1, $S=array()){
+static public function htmLawed($t, $C=1, $S=array()){
     $C = is_array($C) ? $C : array();
     if(!empty($C['valid_xhtml'])){
         $C['elements'] = empty($C['elements']) ? '*-center-dir-font-isindex-menu-s-strike-u' : $C['elements'];
@@ -59,7 +59,7 @@ function htmLawed($t, $C=1, $S=array()){
     }
 // config rest
     $C['and_mark'] = empty($C['and_mark']) ? 0 : 1;
-    $C['anti_link_spam'] = (isset($C['anti_link_spam']) && is_array($C['anti_link_spam']) && count($C['anti_link_spam']) == 2 && (empty($C['anti_link_spam'][0]) or hl_regex($C['anti_link_spam'][0])) && (empty($C['anti_link_spam'][1]) or hl_regex($C['anti_link_spam'][1]))) ? $C['anti_link_spam'] : 0;
+    $C['anti_link_spam'] = (isset($C['anti_link_spam']) && is_array($C['anti_link_spam']) && count($C['anti_link_spam']) == 2 && (empty($C['anti_link_spam'][0]) or self::hl_regex($C['anti_link_spam'][0])) && (empty($C['anti_link_spam'][1]) or self::hl_regex($C['anti_link_spam'][1]))) ? $C['anti_link_spam'] : 0;
     $C['anti_mail_spam'] = isset($C['anti_mail_spam']) ? $C['anti_mail_spam'] : 0;
     $C['balance'] = isset($C['balance']) ? (bool)$C['balance'] : 1;
     $C['cdata'] = isset($C['cdata']) ? $C['cdata'] : (empty($C['safe']) ? 3 : 0);
@@ -84,7 +84,7 @@ function htmLawed($t, $C=1, $S=array()){
 
     if(isset($GLOBALS['C'])){$reC = $GLOBALS['C'];}
     $GLOBALS['C'] = $C;
-    $S = is_array($S) ? $S : hl_spec($S);
+    $S = is_array($S) ? $S : self::hl_spec($S);
     if(isset($GLOBALS['S'])){$reS = $GLOBALS['S'];}
     $GLOBALS['S'] = $S;
 
@@ -94,18 +94,18 @@ function htmLawed($t, $C=1, $S=array()){
         $x = $x + ($C['clean_ms_char'] == 1 ? array("\x82"=>'&#8218;', "\x84"=>'&#8222;', "\x91"=>'&#8216;', "\x92"=>'&#8217;', "\x93"=>'&#8220;', "\x94"=>'&#8221;') : array("\x82"=>'\'', "\x84"=>'"', "\x91"=>'\'', "\x92"=>'\'', "\x93"=>'"', "\x94"=>'"'));
         $t = strtr($t, $x);
     }
-    if($C['cdata'] or $C['comment']){$t = preg_replace_callback('`<!(?:(?:--.*?--)|(?:\[CDATA\[.*?\]\]))>`sm', 'hl_cmtcd', $t);}
-    $t = preg_replace_callback('`&amp;([A-Za-z][A-Za-z0-9]{1,30}|#(?:[0-9]{1,8}|[Xx][0-9A-Fa-f]{1,7}));`', 'hl_ent', str_replace('&', '&amp;', $t));
-    if($C['unique_ids'] && !isset($GLOBALS['hl_Ids'])){$GLOBALS['hl_Ids'] = array();}
+    if($C['cdata'] or $C['comment']){$t = preg_replace_callback('`<!(?:(?:--.*?--)|(?:\[CDATA\[.*?\]\]))>`sm', 'self::hl_cmtcd', $t);}
+    $t = preg_replace_callback('`&amp;([A-Za-z][A-Za-z0-9]{1,30}|#(?:[0-9]{1,8}|[Xx][0-9A-Fa-f]{1,7}));`', 'self::hl_ent', str_replace('&', '&amp;', $t));
+    if($C['unique_ids'] && !isset($GLOBALS['self::hl_Ids'])){$GLOBALS['self::hl_Ids'] = array();}
     if($C['hook']){$t = $C['hook']($t, $C, $S);}
     if($C['show_setting'] && preg_match('`^[a-z][a-z0-9_]*$`i', $C['show_setting'])){
         $GLOBALS[$C['show_setting']] = array('config'=>$C, 'spec'=>$S, 'time'=>microtime());
     }
 // main
-    $t = preg_replace_callback('`<(?:(?:\s|$)|(?:[^>]*(?:>|$)))|>`m', 'hl_tag', $t);
-    $t = $C['balance'] ? hl_bal($t, $C['keep_bad'], $C['parent']) : $t;
+    $t = preg_replace_callback('`<(?:(?:\s|$)|(?:[^>]*(?:>|$)))|>`m', 'self::hl_tag', $t);
+    $t = $C['balance'] ? self::hl_bal($t, $C['keep_bad'], $C['parent']) : $t;
     $t = (($C['cdata'] or $C['comment']) && strpos($t, "\x01") !== false) ? str_replace(array("\x01", "\x02", "\x03", "\x04", "\x05"), array('', '', '&', '<', '>'), $t) : $t;
-    $t = $C['tidy'] ? hl_tidy($t, $C['tidy'], $C['parent']) : $t;
+    $t = $C['tidy'] ? self::hl_tidy($t, $C['tidy'], $C['parent']) : $t;
     unset($C, $e);
     if(isset($reC)){$GLOBALS['C'] = $reC;}
     if(isset($reS)){$GLOBALS['S'] = $reS;}
@@ -113,7 +113,7 @@ function htmLawed($t, $C=1, $S=array()){
 // eof
 }
 
-function hl_attrval($t, $p){
+static public function hl_attrval($t, $p){
 // check attr val against $S
     $o = 1; $l = strlen($t);
     foreach($p as $k=>$v){
@@ -141,7 +141,7 @@ function hl_attrval($t, $p){
 // eof
 }
 
-function hl_bal($t, $do=1, $in='div'){
+static public function hl_bal($t, $do=1, $in='div'){
 // balance tags
 // by content
     $cB = array('blockquote'=>1, 'form'=>1, 'map'=>1, 'noscript'=>1); // Block
@@ -297,7 +297,7 @@ function hl_bal($t, $do=1, $in='div'){
 // eof
 }
 
-function hl_cmtcd($t){
+static public function hl_cmtcd($t){
 // comment/CDATA sec handler
     $t = $t[0];
     global $C;
@@ -312,7 +312,7 @@ function hl_cmtcd($t){
 // eof
 }
 
-function hl_ent($t){
+static public function hl_ent($t){
 // entitity handler
     global $C;
     $t = $t[1];
@@ -328,7 +328,7 @@ function hl_ent($t){
 // eof
 }
 
-function hl_prot($p, $c=null){
+static public function hl_prot($p, $c=null){
 // check URL scheme
     global $C;
     $b = $a = '';
@@ -361,7 +361,7 @@ function hl_prot($p, $c=null){
 // eof
 }
 
-function hl_regex($p){
+static public function hl_regex($p){
 // ?regex
     if(empty($p)){return 0;}
     if($t = ini_get('track_errors')){$o = isset($php_errormsg) ? $php_errormsg : null;}
@@ -377,7 +377,7 @@ function hl_regex($p){
 // eof
 }
 
-function hl_spec($t){
+static public function hl_spec($t){
 // final $spec
     $s = array();
     $t = str_replace(array("\t", "\r", "\n", ' '), '', preg_replace('/"(?>(`.|[^"])*)"/sme', 'substr(str_replace(array(";", "|", "~", " ", ",", "/", "(", ")", \'`"\'), array("\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08", "\""), "$0"), 1, -1)', trim($t)));
@@ -394,8 +394,8 @@ function hl_spec($t){
                 if(empty($m) or ($p = strpos($m, '=')) == 0 or $p < 5){$y[$x] = 1; continue;}
                 $y[$x][strtolower(substr($m, 0, $p))] = str_replace(array("\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08"), array(";", "|", "~", " ", ",", "/", "(", ")"), substr($m, $p+1));
             }
-            if(isset($y[$x]['match']) && !hl_regex($y[$x]['match'])){unset($y[$x]['match']);}
-            if(isset($y[$x]['nomatch']) && !hl_regex($y[$x]['nomatch'])){unset($y[$x]['nomatch']);}
+            if(isset($y[$x]['match']) && !self::hl_regex($y[$x]['match'])){unset($y[$x]['match']);}
+            if(isset($y[$x]['nomatch']) && !self::hl_regex($y[$x]['nomatch'])){unset($y[$x]['nomatch']);}
         }
         if(!count($y) && !count($n)){continue;}
         foreach(explode(',', substr($w, 0, $e)) as $v){
@@ -408,7 +408,7 @@ function hl_spec($t){
 // eof
 }
 
-function hl_tag($t){
+static public function hl_tag($t){
 // tag/attribute handler
     global $C;
     $t = $t[0];
@@ -425,7 +425,7 @@ function hl_tag($t){
 // tag transform
     static $eD = array('applet'=>1, 'center'=>1, 'dir'=>1, 'embed'=>1, 'font'=>1, 'isindex'=>1, 'menu'=>1, 's'=>1, 'strike'=>1, 'u'=>1); // Deprecated
     if($C['make_tag_strict'] && isset($eD[$e])){
-        $trt = hl_tag2($e, $a, $C['make_tag_strict']);
+        $trt = self::hl_tag2($e, $a, $C['make_tag_strict']);
         if(!$e){return (($C['keep_bad']%2) ? str_replace(array('<', '>'), array('&lt;', '&gt;'), $t) : '');}
     }
 // close tag
@@ -502,11 +502,11 @@ function hl_tag($t){
                     static $sC = array('&#x20;'=>' ', '&#32;'=>' ', '&#x45;'=>'e', '&#69;'=>'e', '&#x65;'=>'e', '&#101;'=>'e', '&#x58;'=>'x', '&#88;'=>'x', '&#x78;'=>'x', '&#120;'=>'x', '&#x50;'=>'p', '&#80;'=>'p', '&#x70;'=>'p', '&#112;'=>'p', '&#x53;'=>'s', '&#83;'=>'s', '&#x73;'=>'s', '&#115;'=>'s', '&#x49;'=>'i', '&#73;'=>'i', '&#x69;'=>'i', '&#105;'=>'i', '&#x4f;'=>'o', '&#79;'=>'o', '&#x6f;'=>'o', '&#111;'=>'o', '&#x4e;'=>'n', '&#78;'=>'n', '&#x6e;'=>'n', '&#110;'=>'n', '&#x55;'=>'u', '&#85;'=>'u', '&#x75;'=>'u', '&#117;'=>'u', '&#x52;'=>'r', '&#82;'=>'r', '&#x72;'=>'r', '&#114;'=>'r', '&#x4c;'=>'l', '&#76;'=>'l', '&#x6c;'=>'l', '&#108;'=>'l', '&#x28;'=>'(', '&#40;'=>'(', '&#x29;'=>')', '&#41;'=>')', '&#x20;'=>':', '&#32;'=>':', '&#x22;'=>'"', '&#34;'=>'"', '&#x27;'=>"'", '&#39;'=>"'", '&#x2f;'=>'/', '&#47;'=>'/', '&#x2a;'=>'*', '&#42;'=>'*', '&#x5c;'=>'\\', '&#92;'=>'\\');
                     $v = strtr($v, $sC);
                 }
-                $v = preg_replace_callback('`(url(?:\()(?: )*(?:\'|"|&(?:quot|apos);)?)(.+?)((?:\'|"|&(?:quot|apos);)?(?: )*(?:\)))`iS', 'hl_prot', $v);
+                $v = preg_replace_callback('`(url(?:\()(?: )*(?:\'|"|&(?:quot|apos);)?)(.+?)((?:\'|"|&(?:quot|apos);)?(?: )*(?:\)))`iS', 'self::hl_prot', $v);
                 $v = !$C['css_expression'] ? preg_replace('`expression`i', ' ', preg_replace('`\\\\\S|(/|(%2f))(\*|(%2a))`i', ' ', $v)) : $v;
             }elseif(isset($aNP[$k]) or strpos($k, 'src') !== false or $k[0] == 'o'){
                 $v = str_replace("\xad", ' ', (strpos($v, '&') !== false ? str_replace(array('&#xad;', '&#173;', '&shy;'), ' ', $v) : $v));
-                $v = hl_prot($v, $k);
+                $v = self::hl_prot($v, $k);
                 if($k == 'href'){ // X-spam
                     if($C['anti_mail_spam'] && strpos($v, 'mailto:') === 0){
                         $v = str_replace('@', htmlspecialchars($C['anti_mail_spam']), $v);
@@ -524,7 +524,7 @@ function hl_tag($t){
                     }
                 }
             }
-            if(isset($rl[$k]) && is_array($rl[$k]) && ($v = hl_attrval($v, $rl[$k])) === 0){continue;}
+            if(isset($rl[$k]) && is_array($rl[$k]) && ($v = self::hl_attrval($v, $rl[$k])) === 0){continue;}
             $a[$k] = str_replace('"', '&quot;', $v);
         }
     }
@@ -592,10 +592,10 @@ function hl_tag($t){
     }
 // unique ID
     if($C['unique_ids'] && isset($a['id'])){
-        if(!preg_match('`^[A-Za-z][A-Za-z0-9_\-.:]*$`', ($id = $a['id'])) or (isset($GLOBALS['hl_Ids'][$id]) && $C['unique_ids'] == 1)){unset($a['id']);
+        if(!preg_match('`^[A-Za-z][A-Za-z0-9_\-.:]*$`', ($id = $a['id'])) or (isset($GLOBALS['self::hl_Ids'][$id]) && $C['unique_ids'] == 1)){unset($a['id']);
         }else{
-            while(isset($GLOBALS['hl_Ids'][$id])){$id = $C['unique_ids']. $id;}
-            $GLOBALS['hl_Ids'][($a['id'] = $id)] = 1;
+            while(isset($GLOBALS['self::hl_Ids'][$id])){$id = $C['unique_ids']. $id;}
+            $GLOBALS['self::hl_Ids'][($a['id'] = $id)] = 1;
         }
     }
 // xml:lang
@@ -617,7 +617,7 @@ function hl_tag($t){
 // eof
 }
 
-function hl_tag2(&$e, &$a, $t=1){
+static public function hl_tag2(&$e, &$a, $t=1){
 // transform tag
     if($e == 'center'){$e = 'div'; return 'text-align: center;';}
     if($e == 'dir' or $e == 'menu'){$e = 'ul'; return '';}
@@ -642,7 +642,7 @@ function hl_tag2(&$e, &$a, $t=1){
 // eof
 }
 
-function hl_tidy($t, $w, $p){
+static public function hl_tidy($t, $w, $p){
 // Tidy/compact HTM
     if(strpos(' pre,script,textarea', "$p,")){return $t;}
     $t = preg_replace('`\s+`', ' ', preg_replace_callback(array('`(<(!\[CDATA\[))(.+?)(\]\]>)`sm', '`(<(!--))(.+?)(-->)`sm', '`(<(pre|script|textarea)[^>]*?>)(.+?)(</\2>)`sm'), create_function('$m', 'return $m[1]. str_replace(array("<", ">", "\n", "\r", "\t", " "), array("\x01", "\x02", "\x03", "\x04", "\x05", "\x07"), $m[3]). $m[4];'), $t));
@@ -697,13 +697,13 @@ function hl_tidy($t, $w, $p){
 // eof
 }
 
-function hl_version(){
+static public function hl_version(){
 // rel
     return '1.1.16';
 // eof
 }
 
-function kses($t, $h, $p=array('http', 'https', 'ftp', 'news', 'nntp', 'telnet', 'gopher', 'mailto')){
+static public function kses($t, $h, $p=array('http', 'https', 'ftp', 'news', 'nntp', 'telnet', 'gopher', 'mailto')){
 // kses compat
     foreach($h as $k=>$v){
         $h[$k]['n']['*'] = 1;
@@ -713,11 +713,11 @@ function kses($t, $h, $p=array('http', 'https', 'ftp', 'news', 'nntp', 'telnet',
     $C['elements'] = count($h) ? strtolower(implode(',', array_keys($h))) : '-*';
     $C['hook'] = 'kses_hook';
     $C['schemes'] = '*:'. implode(',', $p);
-    return htmLawed($t, $C, $h);
+    return self::htmLawed($t, $C, $h);
 // eof
 }
 
-function kses_hook($t, &$C, &$S){
+static public function kses_hook($t, &$C, &$S){
 // kses compat
     return $t;
 // eof
