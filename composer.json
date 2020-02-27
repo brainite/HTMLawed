@@ -1,5 +1,5 @@
 {
-    "name":"wittiws/htmlawed",
+    "name":"brainite/htmlawed",
     "description":"htmLawed - Adjusted to use static functions for autoloading",
     "keywords":[ "html", "strip", "HTMLtidy", "tags", "sanitize" ],
     "homepage":"http://www.bioinformatics.org/phplabware/internal_utilities/htmLawed/",
